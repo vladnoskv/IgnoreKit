@@ -2,9 +2,22 @@
   "name": "ignorekit",
   "displayName": "IgnoreKit",
   "description": "Add files and folders to .gitignore, .npmignore, and .vscodeignore from the VS Code Explorer.",
-  "version": "0.0.2",
-  "publisher": "ignorekit",
+  "version": "0.0.3",
+  "publisher": "vladnoskv",
   "license": "SEE LICENSE IN LICENSE",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#0F172A",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vladnoskv/IgnoreKit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vladnoskv/IgnoreKit/issues"
+  },
+  "homepage": "https://github.com/vladnoskv/IgnoreKit#readme",
   "engines": {
     "vscode": "^1.74.0"
   },

@@ -2,10 +2,19 @@
 
 Use this checklist before uploading a VSIX to Visual Studio Marketplace.
 
+## Current Release
+
+- Version: `0.0.3`
+- VSIX: `ignorekit-0.0.3.vsix`
+- Publisher ID in manifest: `vladnoskv`
+- Repository: `https://github.com/vladnoskv/IgnoreKit`
+- Icon: `media/icon.png`
+- Gallery banner: configured in `package.json`
+
 ## Required
 
 - Create or confirm your Visual Studio Marketplace publisher.
-- Set `publisher` in `package.json` to your Marketplace publisher ID.
+- Set `publisher` in `package.json` to your Marketplace publisher ID, not your display name.
 - Make sure `name` is available on the Marketplace.
 - Keep `version` as valid SemVer and increment it for every published update.
 - Include `README.md`, `CHANGELOG.md`, and `LICENSE`.
@@ -20,21 +29,9 @@ npm run package
 
 ## Strongly Recommended
 
-- Add the public repository URL to `package.json`:
-
-```json
-"repository": {
-  "type": "git",
-  "url": "https://github.com/<owner>/<repo>.git"
-},
-"bugs": {
-  "url": "https://github.com/<owner>/<repo>/issues"
-},
-"homepage": "https://github.com/<owner>/<repo>#readme"
-```
-
-- Add a non-SVG Marketplace icon and reference it from `package.json`.
-- Add `galleryBanner.color` and `galleryBanner.theme` for Marketplace presentation.
+- Confirm the public repository metadata in `package.json` points to `https://github.com/vladnoskv/IgnoreKit`.
+- Confirm `icon` points to `media/icon.png`.
+- Confirm `galleryBanner.color` and `galleryBanner.theme` are set for Marketplace presentation.
 - Install the packaged VSIX locally and test the Explorer commands in a real VS Code window.
 
 ## Upload

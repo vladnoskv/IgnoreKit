@@ -4,3 +4,9 @@ dist/
 coverage/
 .vscode-test/
 npm-debug.log*
+
+# IgnoreKit
+# Added from VS Code Explorer
+src/ignore-file.test.ts
+src/ignore-targets.test.ts
+# End IgnoreKit

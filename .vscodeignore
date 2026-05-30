@@ -15,3 +15,9 @@ READMEDev.md
 CONTRIBUTING.md
 PUBLISHING.md
 SECURITY.md
+
+# IgnoreKit
+# Added from VS Code Explorer
+src/ignore-file.test.ts
+src/ignore-targets.test.ts
+# End IgnoreKit

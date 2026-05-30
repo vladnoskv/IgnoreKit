@@ -1,4 +1,4 @@
-# IgnoreKit v0.0.2
+# IgnoreKit
 
 Add files and folders to ignore files from the VS Code Explorer.
 
@@ -26,6 +26,10 @@ Right-click a file or folder in the Explorer and choose:
 - `Remove from Ignore File...`
 
 If one ignore file applies, IgnoreKit updates it immediately. If multiple ignore files apply, IgnoreKit asks which file you want to update.
+
+## Installation
+
+Install IgnoreKit from Visual Studio Marketplace in VS Code.
 
 ## Supported Ignore Files
 
@@ -95,13 +99,6 @@ npm test -- --run
 npm run compile
 ```
 
-## Packaging
-
-```sh
-npm run package
-```
-
-This creates a `.vsix` file that can be uploaded to Visual Studio Marketplace.
 
 ## Contributing
 
