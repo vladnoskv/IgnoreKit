@@ -1,0 +1,17 @@
+.git/**
+.vscode/**
+.gitignore
+coverage/**
+docs/**
+node_modules/**
+src/**
+**/*.map
+*.vsix
+eslint.config.mjs
+tsconfig.json
+vitest.config.*
+package-lock.json
+READMEDev.md
+CONTRIBUTING.md
+PUBLISHING.md
+SECURITY.md

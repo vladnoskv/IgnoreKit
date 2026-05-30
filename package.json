@@ -1,0 +1,73 @@
+{
+  "name": "ignorekit",
+  "displayName": "IgnoreKit",
+  "description": "Add files and folders to .gitignore, .npmignore, and .vscodeignore from the VS Code Explorer.",
+  "version": "0.0.2",
+  "publisher": "ignorekit",
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "ignore",
+    "gitignore",
+    "npmignore",
+    "vscodeignore",
+    "git",
+    "explorer",
+    "context menu"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "ignoreKit.addToIgnoreFile",
+        "title": "Add to Ignore File...",
+        "category": "IgnoreKit"
+      },
+      {
+        "command": "ignoreKit.removeFromIgnoreFile",
+        "title": "Remove from Ignore File...",
+        "category": "IgnoreKit"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "ignoreKit.addToIgnoreFile",
+          "group": "navigation@99",
+          "when": "resourceScheme == file"
+        },
+        {
+          "command": "ignoreKit.removeFromIgnoreFile",
+          "group": "navigation@100",
+          "when": "resourceScheme == file"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --external:vscode --format=cjs --platform=node --outfile=dist/extension.js --sourcemap",
+    "check-types": "tsc --noEmit",
+    "compile": "npm run check-types && npm run build",
+    "lint": "eslint .",
+    "package": "vsce package",
+    "test": "vitest",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
+    "@vscode/vsce": "^3.9.1",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.4.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  }
+}
