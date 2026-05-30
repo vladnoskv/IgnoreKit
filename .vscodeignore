@@ -20,4 +20,5 @@ SECURITY.md
 # Added from VS Code Explorer
 src/ignore-file.test.ts
 src/ignore-targets.test.ts
+/PUBLISHING.md
 # End IgnoreKit
