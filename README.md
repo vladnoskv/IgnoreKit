@@ -90,15 +90,6 @@ dist/
 
 IgnoreKit runs locally in VS Code. It does not send file paths, project data, or ignore-file contents to any external service.
 
-## Development
-
-```sh
-npm install
-npm run lint
-npm test -- --run
-npm run compile
-```
-
 
 ## Contributing
 
