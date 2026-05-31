@@ -3,6 +3,7 @@ dist/
 *.vsix
 coverage/
 .vscode-test/
+.worktrees
 npm-debug.log*
 
 # IgnoreKit
