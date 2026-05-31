@@ -2,7 +2,7 @@
   "name": "ignorekit",
   "displayName": "IgnoreKit",
   "description": "Add files and folders to .gitignore, .npmignore, and .vscodeignore from the VS Code Explorer.",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "publisher": "VladNoskov",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",

@@ -1,5 +1,7 @@
 .git/**
 .vscode/**
+.worktrees/**
+worktrees/**
 .gitignore
 coverage/**
 docs/**

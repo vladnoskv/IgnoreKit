@@ -3,7 +3,7 @@ import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '*.vsix']
+    ignores: ['dist/**', 'node_modules/**', '.worktrees/**', 'worktrees/**', '*.vsix']
   },
   {
     files: ['**/*.ts'],
