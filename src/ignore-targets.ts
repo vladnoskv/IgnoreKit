@@ -1,7 +1,8 @@
 import { isSamePathOrChild, stripTrailingSlash, toPosixPath } from './ignore-file';
 import type { ResourceKind } from './ignore-file';
+import { detectFrameworks } from './frameworks';
 
-export type IgnoreTargetKind = 'git' | 'npm' | 'vscode';
+export type IgnoreTargetKind = 'git' | 'npm' | 'vscode' | 'docker' | 'eslint' | 'prettier' | 'stylelint' | 'helm' | 'cf' | 'terraform' | 'serverless' | 'babel' | 'eleventy' | 'vercel' | 'slug' | 'func';
 export type PackageManager = 'bun' | 'pnpm' | 'yarn' | 'npm' | 'package';
 
 export interface IgnoreTarget {
@@ -27,10 +28,6 @@ export function resolveIgnoreTargets(input: ResolveIgnoreTargetsInput): IgnoreTa
     throw new Error('Selected resource is outside the workspace folder.');
   }
 
-  if (isInsideNodeModules(workspacePath, resourcePath)) {
-    throw new Error('IgnoreKit does not update ignore files for resources inside node_modules.');
-  }
-
   const targets: IgnoreTarget[] = [
     {
       kind: 'git',
@@ -41,47 +38,56 @@ export function resolveIgnoreTargets(input: ResolveIgnoreTargetsInput): IgnoreTa
     }
   ];
 
-  const packageRoot = findNearestPackageRoot(
+  const frameworks = detectFrameworks(
     workspacePath,
     resourcePath,
     input.resourceKind ?? 'file',
     input.directoryEntries
   );
 
-  if (!packageRoot) {
-    return targets;
-  }
+  for (const framework of frameworks) {
+    const kind = mapConfigToKind(framework.config.ignoreFileName);
+    let label = framework.config.ignoreFileName;
 
-  const entries = input.directoryEntries.get(packageRoot);
+    if (framework.config.ignoreFileName === '.npmignore' || framework.config.ignoreFileName === '.vscodeignore') {
+      const entries = input.directoryEntries.get(framework.rootPath);
+      const pm = entries ? detectPackageManager(entries) : 'package';
+      label = `${framework.config.ignoreFileName} (${pm} package)`;
+    } else {
+      label = `${framework.config.ignoreFileName} (${framework.config.label})`;
+    }
 
-  if (!entries) {
-    return targets;
-  }
-
-  const packageManager = detectPackageManager(entries);
-  const suffix = ` (${packageManager} package)`;
-
-  if (entries.has('.npmignore')) {
     targets.push({
-      kind: 'npm',
-      label: `.npmignore${suffix}`,
-      fileName: '.npmignore',
-      rootPath: packageRoot,
-      canCreate: false
-    });
-  }
-
-  if (entries.has('.vscodeignore')) {
-    targets.push({
-      kind: 'vscode',
-      label: `.vscodeignore${suffix}`,
-      fileName: '.vscodeignore',
-      rootPath: packageRoot,
-      canCreate: false
+      kind,
+      label,
+      fileName: framework.config.ignoreFileName,
+      rootPath: framework.rootPath,
+      canCreate: framework.config.canCreate
     });
   }
 
   return targets;
+}
+
+function mapConfigToKind(ignoreFileName: string): IgnoreTargetKind {
+  switch (ignoreFileName) {
+    case '.npmignore': return 'npm';
+    case '.vscodeignore': return 'vscode';
+    case '.dockerignore': return 'docker';
+    case '.eslintignore': return 'eslint';
+    case '.prettierignore': return 'prettier';
+    case '.stylelintignore': return 'stylelint';
+    case '.helmignore': return 'helm';
+    case '.cfignore': return 'cf';
+    case '.terraformignore': return 'terraform';
+    case '.serverlessignore': return 'serverless';
+    case '.babelignore': return 'babel';
+    case '.eleventyignore': return 'eleventy';
+    case '.vercelignore': return 'vercel';
+    case '.slugignore': return 'slug';
+    case '.funcignore': return 'func';
+    default: return 'git';
+  }
 }
 
 export function detectPackageManager(entries: ReadonlySet<string>): PackageManager {
@@ -102,45 +108,4 @@ export function detectPackageManager(entries: ReadonlySet<string>): PackageManag
   }
 
   return 'package';
-}
-
-function findNearestPackageRoot(
-  workspacePath: string,
-  resourcePath: string,
-  resourceKind: ResourceKind,
-  directoryEntries: ReadonlyMap<string, ReadonlySet<string>>
-): string | undefined {
-  let currentPath = resourceKind === 'directory' ? resourcePath : getDirectoryPath(resourcePath);
-
-  while (isSamePathOrChild(workspacePath, currentPath)) {
-    const entries = directoryEntries.get(currentPath);
-
-    if (entries?.has('package.json')) {
-      return currentPath;
-    }
-
-    if (currentPath === workspacePath) {
-      break;
-    }
-
-    currentPath = getDirectoryPath(currentPath);
-  }
-
-  return undefined;
-}
-
-function isInsideNodeModules(workspacePath: string, resourcePath: string): boolean {
-  const relativePath = resourcePath.slice(workspacePath.length).replace(/^\/+/, '');
-  return relativePath.split('/').includes('node_modules');
-}
-
-function getDirectoryPath(filePath: string): string {
-  const normalizedPath = stripTrailingSlash(filePath);
-  const lastSlashIndex = normalizedPath.lastIndexOf('/');
-
-  if (lastSlashIndex <= 0) {
-    return normalizedPath;
-  }
-
-  return normalizedPath.slice(0, lastSlashIndex);
 }

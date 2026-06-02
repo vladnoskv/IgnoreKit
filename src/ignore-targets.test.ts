@@ -84,14 +84,103 @@ describe('resolveIgnoreTargets', () => {
     expect(targets.map((target) => target.fileName)).toEqual(['.gitignore']);
   });
 
-  it('rejects resources inside node_modules', () => {
-    expect(() =>
-      resolveIgnoreTargets({
-        workspacePath,
-        resourcePath: '/repo/node_modules/pkg/index.js',
-        directoryEntries: new Map()
-      })
-    ).toThrow('IgnoreKit does not update ignore files for resources inside node_modules.');
+  it('allows resources inside node_modules', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/node_modules/pkg/index.js',
+      directoryEntries: new Map()
+    });
+
+    expect(targets.map((t) => t.fileName)).toEqual(['.gitignore']);
+  });
+
+  it('offers .dockerignore when a Dockerfile exists and dockerignore is present', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/src/index.ts',
+      directoryEntries: new Map([
+        ['/repo/src', new Set(['index.ts'])],
+        ['/repo', new Set(['Dockerfile', '.dockerignore'])]
+      ])
+    });
+
+    expect(targets.map((t) => t.fileName)).toEqual(['.gitignore', '.dockerignore']);
+    expect(targets[1].label).toBe('.dockerignore (Docker)');
+    expect(targets[1].canCreate).toBe(true);
+  });
+
+  it('offers to create .dockerignore when Dockerfile exists but dockerignore does not', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/src/index.ts',
+      directoryEntries: new Map([
+        ['/repo/src', new Set(['index.ts'])],
+        ['/repo', new Set(['Dockerfile'])]
+      ])
+    });
+
+    expect(targets.map((t) => t.fileName)).toEqual(['.gitignore', '.dockerignore']);
+    expect(targets[1].label).toBe('.dockerignore (Docker)');
+    expect(targets[1].canCreate).toBe(true);
+  });
+
+  it('offers .eslintignore and .prettierignore alongside gitignore', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/src/index.ts',
+      directoryEntries: new Map([
+        ['/repo/src', new Set(['index.ts'])],
+        ['/repo', new Set(['.eslintrc.json', '.eslintignore', '.prettierrc', '.prettierignore'])]
+      ])
+    });
+
+    const fileNames = targets.map((t) => t.fileName);
+    expect(fileNames).toContain('.gitignore');
+    expect(fileNames).toContain('.eslintignore');
+    expect(fileNames).toContain('.prettierignore');
+  });
+
+  it('does not offer .helmignore when Chart.yaml exists but helmignore is absent', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/chart/templates/deployment.yaml',
+      directoryEntries: new Map([
+        ['/repo/chart/templates', new Set(['deployment.yaml'])],
+        ['/repo/chart', new Set(['Chart.yaml', 'values.yaml'])]
+      ])
+    });
+
+    expect(targets.map((t) => t.fileName)).toEqual(['.gitignore']);
+  });
+
+  it('offers .helmignore when Chart.yaml and .helmignore both exist', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/chart/templates/deployment.yaml',
+      directoryEntries: new Map([
+        ['/repo/chart/templates', new Set(['deployment.yaml'])],
+        ['/repo/chart', new Set(['Chart.yaml', '.helmignore', 'values.yaml'])]
+      ])
+    });
+
+    expect(targets.map((t) => t.fileName)).toEqual(['.gitignore', '.helmignore']);
+    expect(targets[1].label).toBe('.helmignore (Helm)');
+    expect(targets[1].canCreate).toBe(false);
+  });
+
+  it('offers multiple ignore files when both npm and Docker configs exist', () => {
+    const targets = resolveIgnoreTargets({
+      workspacePath,
+      resourcePath: '/repo/packages/app/src/index.ts',
+      directoryEntries: new Map([
+        ['/repo/packages/app/src', new Set(['index.ts'])],
+        ['/repo/packages/app', new Set(['package.json', '.npmignore'])],
+        ['/repo', new Set(['Dockerfile', '.dockerignore'])]
+      ])
+    });
+
+    const fileNames = targets.map((t) => t.fileName);
+    expect(fileNames).toEqual(['.gitignore', '.npmignore', '.dockerignore']);
   });
 });
 

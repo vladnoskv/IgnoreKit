@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import {
   addEntryToIgnoreFile,
   createIgnoreEntry,
+  isSamePathOrChild,
   removeEntryFromIgnoreFile,
   stripTrailingSlash,
   toPosixPath,
@@ -47,7 +48,14 @@ async function updateSelectedResourceInIgnoreFile(action: IgnoreAction, selected
   try {
     const stat = await vscode.workspace.fs.stat(resource);
     const resourceKind = getResourceKind(stat);
-    const directoryEntries = await collectDirectoryEntries(workspaceFolder.uri, resource, resourceKind);
+    const directoryEntries = await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: 'Scanning directory structure...',
+        cancellable: false
+      },
+      () => collectDirectoryEntries(workspaceFolder.uri, resource, resourceKind)
+    );
     const targets = resolveIgnoreTargets({
       workspacePath: workspaceFolder.uri.fsPath,
       resourcePath: resource.fsPath,
@@ -62,11 +70,20 @@ async function updateSelectedResourceInIgnoreFile(action: IgnoreAction, selected
 
     const entry = createIgnoreEntry(target.rootPath, resource.fsPath, resourceKind);
     const ignoreFileUri = vscode.Uri.joinPath(vscode.Uri.file(target.rootPath), target.fileName);
-    const existingContent = await readTextFileIfExists(ignoreFileUri, action === 'add' && target.canCreate);
+    const allowMissing = action === 'add' && target.canCreate;
+    const existingContent = await readTextFileIfExists(ignoreFileUri, allowMissing);
+
+    if (!allowMissing && existingContent === null) {
+      vscode.window.showInformationMessage(`${target.fileName} does not exist. Nothing to remove.`);
+      return;
+    }
+
+    const content = existingContent ?? '';
+
     const update =
       action === 'add'
-        ? addEntryToIgnoreFile(existingContent, entry)
-        : removeEntryFromIgnoreFile(existingContent, entry);
+        ? addEntryToIgnoreFile(content, entry)
+        : removeEntryFromIgnoreFile(content, entry);
 
     if (!update.changed) {
       const message =
@@ -98,11 +115,6 @@ async function collectDirectoryEntries(
   resourceKind: ResourceKind
 ): Promise<Map<string, ReadonlySet<string>>> {
   const workspacePath = stripTrailingSlash(toPosixPath(workspaceUri.fsPath));
-  const resourcePath = stripTrailingSlash(toPosixPath(resourceUri.fsPath));
-
-  if (isInsideNodeModules(workspacePath, resourcePath)) {
-    throw new Error('IgnoreKit does not update ignore files for resources inside node_modules.');
-  }
 
   const entriesByDirectory = new Map<string, ReadonlySet<string>>();
   let currentUri = resourceKind === 'directory' ? resourceUri : vscode.Uri.joinPath(resourceUri, '..');
@@ -149,38 +161,26 @@ async function selectIgnoreTarget(
   return selected?.target;
 }
 
-async function readTextFileIfExists(uri: vscode.Uri, allowMissing: boolean): Promise<string> {
+async function readTextFileIfExists(uri: vscode.Uri, allowMissing: boolean): Promise<string | null> {
   try {
     const content = await vscode.workspace.fs.readFile(uri);
-    return new TextDecoder('utf-8').decode(content);
+    const text = new TextDecoder('utf-8').decode(content);
+    return stripBom(text);
   } catch (error) {
     if (allowMissing && isFileNotFound(error)) {
       return '';
+    }
+
+    if (!allowMissing && isFileNotFound(error)) {
+      return null;
     }
 
     throw error;
   }
 }
 
-function isInsideNodeModules(workspacePath: string, resourcePath: string): boolean {
-  const relativePath = stripTrailingSlash(toPosixPath(resourcePath))
-    .slice(stripTrailingSlash(toPosixPath(workspacePath)).length)
-    .replace(/^\/+/, '');
-
-  return relativePath.split('/').includes('node_modules');
-}
-
-function isSamePathOrChild(parentPath: string, childPath: string): boolean {
-  const parent = stripTrailingSlash(toPosixPath(parentPath));
-  const child = stripTrailingSlash(toPosixPath(childPath));
-  const comparisonParent = isWindowsPath(parent) ? parent.toLowerCase() : parent;
-  const comparisonChild = isWindowsPath(child) ? child.toLowerCase() : child;
-
-  return comparisonChild === comparisonParent || comparisonChild.startsWith(`${comparisonParent}/`);
-}
-
-function isWindowsPath(filePath: string): boolean {
-  return /^[a-z]:\//iu.test(filePath);
+function stripBom(text: string): string {
+  return text.codePointAt(0) === 0xFEFF ? text.slice(1) : text;
 }
 
 function isFileNotFound(error: unknown): boolean {

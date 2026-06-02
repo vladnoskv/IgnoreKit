@@ -98,6 +98,26 @@ export function removeEntryFromIgnoreFile(existingContent: string, entry: string
   }
 
   const absoluteEntryIndex = startIndex + 1 + entryIndex;
+
+  if (managedEntries.length === 2) {
+    const updatedLines = trimTrailingEmptyLines([
+      ...lines.slice(0, startIndex),
+      ...lines.slice(endIndex + 1)
+    ]);
+
+    if (updatedLines.length === 0) {
+      return {
+        changed: true,
+        content: ''
+      };
+    }
+
+    return {
+      changed: true,
+      content: `${updatedLines.join(eol)}${eol}`
+    };
+  }
+
   const updatedLines = [
     ...lines.slice(0, absoluteEntryIndex),
     ...lines.slice(absoluteEntryIndex + 1)
@@ -118,10 +138,20 @@ export function stripTrailingSlash(filePath: string): string {
 }
 
 export function isSamePathOrChild(parentPath: string, childPath: string): boolean {
-  const comparisonParent = isWindowsPath(parentPath) ? parentPath.toLowerCase() : parentPath;
-  const comparisonChild = isWindowsPath(childPath) ? childPath.toLowerCase() : childPath;
+  const parent = stripTrailingSlash(parentPath);
+  const child = stripTrailingSlash(childPath);
+  const comparisonParent = isWindowsPath(parent) ? parent.toLowerCase() : parent;
+  const comparisonChild = isWindowsPath(child) ? child.toLowerCase() : child;
 
   return comparisonChild === comparisonParent || comparisonChild.startsWith(`${comparisonParent}/`);
+}
+
+export function isInsideNodeModules(workspacePath: string, resourcePath: string): boolean {
+  const relativePath = stripTrailingSlash(resourcePath)
+    .slice(stripTrailingSlash(workspacePath).length)
+    .replace(/^\/+/, '');
+
+  return relativePath.split('/').includes('node_modules');
 }
 
 function isWindowsPath(filePath: string): boolean {
@@ -147,3 +177,15 @@ function splitLines(content: string): string[] {
 
   return content.replace(/\r?\n$/u, '').split(/\r?\n/u);
 }
+
+function trimTrailingEmptyLines(lines: string[]): string[] {
+  let end = lines.length;
+
+  while (end > 0 && lines[end - 1] === '') {
+    end--;
+  }
+
+  return lines.slice(0, end);
+}
+
+

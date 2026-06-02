@@ -9,14 +9,14 @@ IgnoreKit keeps ignore-file edits close to the file you are working with. Right-
 - Add files and folders from the Explorer context menu.
 - Remove entries that IgnoreKit previously added.
 - Always supports the workspace `.gitignore`.
-- Detects existing package-level `.npmignore` and `.vscodeignore` files.
+- Detects `.npmignore`, `.vscodeignore`, `.dockerignore`, `.eslintignore`, `.prettierignore`, `.stylelintignore`, and 9 more ignore file types.
+- Creates `.gitignore`, `.dockerignore`, `.eslintignore`, `.prettierignore`, and `.stylelintignore` when needed.
 - Shows a picker when more than one ignore file applies.
-- Creates `.gitignore` when needed.
-- Never creates `.npmignore` or `.vscodeignore` automatically.
 - Avoids duplicate entries.
 - Uses portable `/`-separated ignore paths.
 - Adds trailing slashes for folders.
 - Supports multi-root workspaces.
+- Works with files and folders inside `node_modules`.
 
 ## Commands
 
@@ -33,15 +33,28 @@ Install IgnoreKit from Visual Studio Marketplace in VS Code.
 
 ## Supported Ignore Files
 
-| Ignore file | When it is available | Created if missing |
+| Ignore file | Detected when | Created if missing |
 | --- | --- | --- |
 | `.gitignore` | Always, at the selected workspace root | Yes |
-| `.npmignore` | Only when it already exists in the nearest package root | No |
-| `.vscodeignore` | Only when it already exists in the nearest package root | No |
+| `.npmignore` | `package.json` exists in the nearest package root, and `.npmignore` exists | No |
+| `.vscodeignore` | `package.json` exists in the nearest package root, and `.vscodeignore` exists | No |
+| `.dockerignore` | `Dockerfile` or `docker-compose.yml` exists in a parent directory | Yes |
+| `.eslintignore` | ESLint config (`.eslintrc.*`, `eslint.config.*`) exists in a parent directory | Yes |
+| `.prettierignore` | Prettier config (`.prettierrc*`, `prettier.config.*`) exists in a parent directory | Yes |
+| `.stylelintignore` | Stylelint config (`.stylelintrc*`, `stylelint.config.*`) exists in a parent directory | Yes |
+| `.helmignore` | `Chart.yaml` exists and `.helmignore` already exists | No |
+| `.cfignore` | `manifest.yml` exists and `.cfignore` already exists | No |
+| `.terraformignore` | `main.tf` exists and `.terraformignore` already exists | No |
+| `.serverlessignore` | `serverless.yml` exists and `.serverlessignore` already exists | No |
+| `.babelignore` | Babel config (`.babelrc`, `babel.config.*`) exists and `.babelignore` already exists | No |
+| `.eleventyignore` | Eleventy config (`.eleventy.js`, `eleventy.config.*`) exists and `.eleventyignore` already exists | No |
+| `.vercelignore` | `vercel.json` exists and `.vercelignore` already exists | No |
+| `.slugignore` | `Procfile` exists and `.slugignore` already exists | No |
+| `.funcignore` | `host.json` or `function.json` exists and `.funcignore` already exists | No |
 
-IgnoreKit looks upward from the selected file or folder to find the nearest `package.json`. Package ignore files are only offered from that nearest package root, so unrelated packages in the same workspace are left alone.
+IgnoreKit looks upward from the selected file or folder to find the nearest configuration file for each tool. Each ignore file is offered from the directory where its corresponding tool configuration was found.
 
-IgnoreKit does not scan or update paths inside `node_modules`.
+IgnoreKit no longer blocks operations inside `node_modules`.
 
 ## Managed Section
 
@@ -56,16 +69,16 @@ dist/
 
 The remove command only removes entries from this section. It does not delete rules that you wrote manually elsewhere in the file.
 
-## Package Awareness
+## Tool Detection
 
-For package ignore files, IgnoreKit detects common JavaScript package managers from lock files in the nearest package root:
+For `.npmignore` and `.vscodeignore`, IgnoreKit detects common JavaScript package managers from lock files in the nearest package root to provide clearer picker labels:
 
 - Bun: `bun.lock` or `bun.lockb`
 - pnpm: `pnpm-lock.yaml`
 - Yarn: `yarn.lock`
 - npm: `package-lock.json`
 
-Package manager detection is used for clearer picker labels. It does not change which ignore files are created.
+For other ignore files, the tool name is shown in the picker label (e.g., `.dockerignore (Docker)`).
 
 ## Examples
 

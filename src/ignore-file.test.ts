@@ -122,7 +122,22 @@ describe('removeEntryFromIgnoreFile', () => {
     expect(result.content).toBe(original);
   });
 
-  it('keeps an empty managed section after removing the final entry', () => {
+  it('removes the managed section when the last entry is removed', () => {
+    const original =
+      'node_modules/\n' +
+      '\n' +
+      '# IgnoreKit\n' +
+      '# Added from VS Code Explorer\n' +
+      'dist/\n' +
+      '# End IgnoreKit\n';
+
+    const result = removeEntryFromIgnoreFile(original, 'dist/');
+
+    expect(result.changed).toBe(true);
+    expect(result.content).toBe('node_modules/\n');
+  });
+
+  it('removes the managed section when it is the only content', () => {
     const original =
       '# IgnoreKit\n' +
       '# Added from VS Code Explorer\n' +
@@ -132,10 +147,6 @@ describe('removeEntryFromIgnoreFile', () => {
     const result = removeEntryFromIgnoreFile(original, 'dist/');
 
     expect(result.changed).toBe(true);
-    expect(result.content).toBe(
-      '# IgnoreKit\n' +
-        '# Added from VS Code Explorer\n' +
-        '# End IgnoreKit\n'
-    );
+    expect(result.content).toBe('');
   });
 });
